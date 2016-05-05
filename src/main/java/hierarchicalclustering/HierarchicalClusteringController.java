@@ -1,5 +1,7 @@
 package hierarchicalclustering;
 
+import java.net.URI;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -28,7 +31,7 @@ public class HierarchicalClusteringController {
 		return new ResponseEntity<HierClusterOutput>(new HierClusterService().execute(input), HttpStatus.OK);
 	}
 	
-	@RequestMapping(value="/submit", method = RequestMethod.POST)
+	@RequestMapping(value="/submit", method = RequestMethod.POST, produces = "application/json")
 	public ResponseEntity<?> createTask(@RequestBody HierClusterInput data) {
 		new Thread(){
 				public void run() {
@@ -38,19 +41,36 @@ public class HierarchicalClusteringController {
 		}.start();
 		
 		HttpHeaders httpHeaders = new HttpHeaders();
-		// Return URI here
 		Long id = jobId.incrementAndGet();
-		httpHeaders.setLocation(ServletUriComponentsBuilder.fromCurrentContextPath().path("/query/{id}").buildAndExpand(id).toUri());
-		return new ResponseEntity<>(httpHeaders, HttpStatus.ACCEPTED);
+		URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/query/{id}").buildAndExpand(id).toUri();
+		httpHeaders.setLocation(location);
+		
+		return new ResponseEntity<>(Collections.singletonMap("uri", location.toString()), httpHeaders, HttpStatus.ACCEPTED);
 	}
 	
 	@RequestMapping(value="/query/{jobId}", method = RequestMethod.GET)
 	public ResponseEntity<HierClusterOutput> getResult(@PathVariable Long jobId) {
+		this.validateJob(jobId);
 		return new ResponseEntity<HierClusterOutput>(this.resultRepository.findOne(jobId), HttpStatus.OK);
 	}
 	
 	@Autowired
 	HierarchicalClusteringController(ResultRepository resultRepository) {
 		this.resultRepository = resultRepository;
+	}
+	
+	private void validateJob(Long jobId) {
+		if (this.resultRepository.findOne(jobId) == null) {
+			throw new JobNotFoundException(jobId);
+		}
+	}
+}
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
+class JobNotFoundException extends RuntimeException {
+	
+	public JobNotFoundException(Long jobId) {
+		super("Could not find result for job ID #" + jobId + ".\nComputation may take a while for large input data. "
+				+ "Please try again in a few minutes.");
 	}
 }

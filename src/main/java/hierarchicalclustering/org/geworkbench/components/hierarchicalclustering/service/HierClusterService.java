@@ -13,6 +13,5 @@ public class HierClusterService {
 			HierClusterOutput output = new HierClusterOutput(node);
 			
 			return output;
-		 
 	}
 }

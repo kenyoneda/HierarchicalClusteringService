@@ -25,11 +25,4 @@ public class EuclideanDistance implements Distance {
     public double compute(double[] a, double[] b) {
         return distance(a, b);
     }
-
-    // Used to test optimizations
-    public static void main(String[] args) {
-        double[] a = {3.0, Double.NaN};
-        double[] b = {4.0, 10.0};
-        System.out.println("Distance: " + distance(a, b));
-    }
 }
