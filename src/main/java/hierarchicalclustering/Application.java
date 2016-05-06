@@ -7,6 +7,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+/**
+ * @author Ken
+ * Main class that starts web service and initializes H2 (in-memory database).
+ */
 @SpringBootApplication
 public class Application {
 	
