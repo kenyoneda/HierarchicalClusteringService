@@ -37,7 +37,7 @@ public class HierarchicalClusteringController {
 	 * @param input
 	 * @return result
 	 */
-	@RequestMapping(value="/execute", method = RequestMethod.POST)
+	@RequestMapping(value="/task", method = RequestMethod.POST)
 	public ResponseEntity<HierClusterOutput> execute(@RequestBody HierClusterInput input) {
 		return new ResponseEntity<HierClusterOutput>(new HierClusterService().execute(input), HttpStatus.OK);
 	}
@@ -47,7 +47,7 @@ public class HierarchicalClusteringController {
 	 * @param data
 	 * @return link to result
 	 */
-	@RequestMapping(value="/submit", method = RequestMethod.POST, produces = "application/json")
+	@RequestMapping(value="/jobs", method = RequestMethod.POST, produces = "application/json")
 	public ResponseEntity<?> createTask(@RequestBody HierClusterInput data) {
 		
 		// Execute task in separate thread to avoid blocking.
@@ -65,10 +65,10 @@ public class HierarchicalClusteringController {
 		// Put link to job in HTTP location header and body.
 		HttpHeaders httpHeaders = new HttpHeaders();
 		Long id = jobId.incrementAndGet();
-		URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/query/{id}").buildAndExpand(id).toUri();
+		URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/jobs/{id}").buildAndExpand(id).toUri();
 		httpHeaders.setLocation(location);
 		
-		return new ResponseEntity<>(Collections.singletonMap("uri", location.toString()), httpHeaders, HttpStatus.ACCEPTED);
+		return new ResponseEntity<>	(Collections.singletonMap("uri", location.toString()), httpHeaders, HttpStatus.ACCEPTED);
 	}
 	
 	/**
@@ -77,7 +77,7 @@ public class HierarchicalClusteringController {
 	 * @param jobId
 	 * @return result
 	 */
-	@RequestMapping(value="/query/{jobId}", method = RequestMethod.GET)
+	@RequestMapping(value="/jobs/{jobId}", method = RequestMethod.GET)
 	public ResponseEntity<HierClusterOutput> getResult(@PathVariable Long jobId) {
 		this.validateJob(jobId);
 		return new ResponseEntity<HierClusterOutput>(this.resultRepository.findOne(jobId), HttpStatus.OK);
